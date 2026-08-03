@@ -1,0 +1,12 @@
+{
+  "name": "himatsudo-cms-hub",
+  "version": "1.0.0",
+  "description": "Himatsudo / HimatsudoFortune unified CMS admin hub",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "php bin/serve.php"
+  }
+}
