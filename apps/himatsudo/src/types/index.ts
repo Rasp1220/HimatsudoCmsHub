@@ -1,0 +1,194 @@
+export interface User {
+  id: number
+  name: string
+  email: string
+  role: 'admin' | 'editor'
+  avatar?: string | null
+  bio?: string | null
+  instagram_url?: string | null
+  twitter_url?: string | null
+  tiktok_url?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProfileFormData {
+  name: string
+  email: string
+  avatar: string
+  bio: string
+  instagram_url?: string
+  twitter_url?: string
+  tiktok_url?: string
+  password?: string
+}
+
+export interface Category {
+  id: number
+  name: string
+  slug: string
+  type: 'normal' | 'blog' | 'youtube' | 'custom'
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type ArticleStatus = 'draft' | 'published'
+
+export interface Article {
+  id: number
+  title: string
+  slug: string
+  content: string | null
+  blocks: string | null
+  excerpt: string | null
+  eye_catch_image: string | null
+  category_id: number | null
+  category_name: string | null
+  category_type: string | null
+  author_id: number
+  author_name: string | null
+  status: ArticleStatus
+  youtube_url: string | null
+  youtube_video_id: string | null
+  youtube_thumbnail: string | null
+  related_article_ids: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  per_page: number
+  last_page: number
+}
+
+export interface AuthState {
+  user: User | null
+  accessToken: string | null
+  refreshToken: string | null
+}
+
+export interface LoginPayload {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+  user: User
+}
+
+export interface RefreshResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+}
+
+// Block-based article content
+export interface HeadingBlock {
+  id: string
+  type: 'heading'
+  level: 2 | 3 | 4
+  text: string
+}
+
+export interface TextBlock {
+  id: string
+  type: 'text'
+  html: string
+}
+
+export interface ImageBlock {
+  id: string
+  type: 'image'
+  url: string
+  alt: string
+  caption: string
+}
+
+export interface VideoBlock {
+  id: string
+  type: 'video'
+  youtube_url: string
+  video_id: string
+  caption: string
+}
+
+export type ArticleBlock = HeadingBlock | TextBlock | ImageBlock | VideoBlock
+
+export interface ArticleFormData {
+  title: string
+  slug: string
+  content: string
+  blocks?: string
+  excerpt: string
+  eye_catch_image: string
+  category_id: number | null
+  status: ArticleStatus
+  published_at?: string | null
+  youtube_url: string
+  youtube_video_id: string
+  youtube_thumbnail: string
+  related_article_ids?: string | null
+}
+
+export interface YoutubeImportResult {
+  video_id: string
+  title: string
+  thumbnail: string
+  youtube_url: string
+  embed_url: string
+  description: string
+  published_at: string
+}
+
+export interface ApiError {
+  error: string
+  message?: string
+}
+
+// 記事プレビュー（DB 未保存・localStorage 経由でフロント側へ渡すデータ）
+export interface PreviewArticle {
+  title: string
+  slug: string
+  status: ArticleStatus
+  content: string
+  blocks: string
+  eye_catch_image: string
+  category_id: number | null
+  category_name: string | null
+  category_slug: string | null
+  category_type: string | null
+  author_id: number | null
+  author_name: string | null
+  youtube_url: string
+  youtube_video_id: string
+  youtube_thumbnail: string
+  published_at: string | null
+}
+
+export interface PreviewRelatedArticle {
+  id: number
+  title: string
+  slug: string
+  category_name: string | null
+  category_type: string | null
+  eye_catch_image: string | null
+  youtube_thumbnail: string | null
+  published_at: string | null
+}
+
+export interface PreviewPayload {
+  version: number
+  saved_at: string
+  article: PreviewArticle
+  related_articles: PreviewRelatedArticle[]
+}
