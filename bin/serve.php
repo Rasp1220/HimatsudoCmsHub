@@ -9,12 +9,13 @@ declare(strict_types=1);
 |
 | Himatsudo / HimatsudoFortune / HimatsudoCmsHub の3リポジトリが
 | このリポジトリの兄弟ディレクトリとしてチェックアウトされている前提で、
-| 開発に必要な4プロセスを1コマンドでまとめて起動する。
+| 開発に必要な5プロセスを1コマンドでまとめて起動する。
 |
 |   - Himatsudo アプリ (API + フロントエンド)   : http://localhost:8080
 |   - HimatsudoFortune アプリ (API + サイト)    : http://localhost:8180
 |   - apps/himatsudo (Vite dev server)         : http://localhost:5174/himatsudo/
 |   - apps/fortune   (Vite dev server)         : http://localhost:5175/fortune/
+|   - ハブ入口ページ (public/index.html)        : http://localhost:5173/
 |
 */
 
@@ -79,12 +80,17 @@ $procs['apps/fortune'] = [
     'proc' => startProcess('apps/fortune', $npmCmd, $root . '/apps/fortune', $desc, $pipes, false),
     'critical' => false,
 ];
+$procs['ハブ入口ページ'] = [
+    'proc' => startProcess('ハブ入口ページ', [$php, '-S', 'localhost:5173', '-t', $root . '/public'], $root, $desc, $pipes, false),
+    'critical' => false,
+];
 
 echo "起動中...\n";
 echo "  Himatsudo app   : http://localhost:8080\n";
 echo "  Fortune app     : http://localhost:8180\n";
 echo "  apps/himatsudo  : http://localhost:5174/himatsudo/\n";
 echo "  apps/fortune    : http://localhost:5175/fortune/\n";
+echo "  ハブ入口ページ   : http://localhost:5173/\n";
 echo "停止: Ctrl+C\n\n";
 
 while (true) {

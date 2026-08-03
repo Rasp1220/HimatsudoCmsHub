@@ -3,6 +3,7 @@
 Himatsudo（記事CMS）と HimatsudoFortune（占いサービス）の管理画面（CMS）を
 1つのハブにまとめた統合CMSです。
 
+- `admin.himatsudo.com/` — 2つのCMSへのリンクが並ぶハブ入口ページ
 - `admin.himatsudo.com/himatsudo/` — Himatsudo の記事・カテゴリ・ユーザー管理
 - `admin.himatsudo.com/fortune/` — HimatsudoFortune のコラム・お知らせ・ユーザー管理
 
@@ -14,6 +15,8 @@ DB接続は各サービスの既存バックエンドがそのまま担い、こ
 
 ```
 HimatsudoCmsHub/
+  public/
+    index.html   # ハブ入口ページ（静的HTML、ビルド不要）
   apps/
     himatsudo/   # Himatsudo管理画面 (base: /himatsudo/)
     fortune/     # HimatsudoFortune管理画面 (base: /fortune/)
@@ -57,7 +60,7 @@ npm run dev
 php bin/serve.php
 ```
 
-以下の4プロセスがまとめて起動します。
+以下の5プロセスがまとめて起動します。
 
 | プロセス | URL |
 |---|---|
@@ -65,6 +68,11 @@ php bin/serve.php
 | HimatsudoFortune アプリ (API + サイト) | http://localhost:8180 |
 | apps/himatsudo (管理画面) | http://localhost:5174/himatsudo/ |
 | apps/fortune (管理画面) | http://localhost:5175/fortune/ |
+| ハブ入口ページ | http://localhost:5173/ |
+
+ハブ入口ページから各CMSへのリンクをクリックすると、ローカル開発時は
+それぞれのVite dev serverのポート（5174 / 5175）へ遷移します
+（本番では同一オリジンの `/himatsudo/` `/fortune/` への相対リンクになります）。
 
 Ctrl+C で全プロセスが停止します。
 
@@ -85,5 +93,6 @@ cd apps/fortune && npm test
 ## 本番デプロイ
 
 `deploy/nginx-admin-himatsudo-com.conf` を参照してください。
-`admin.himatsudo.com` の `/himatsudo/` と `/fortune/` パス配下に、
-それぞれのビルド成果物 (`apps/*/dist/`) を配置する構成のサンプルです。
+`admin.himatsudo.com` のルート (`/`) で `public/index.html`（ハブ入口ページ）を、
+`/himatsudo/` と `/fortune/` パス配下でそれぞれのビルド成果物 (`apps/*/dist/`) を
+配信する構成のサンプルです。
