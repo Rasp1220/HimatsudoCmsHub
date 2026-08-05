@@ -1,0 +1,57 @@
+# =============================================================================
+# 自宅サーバ（CMS: himatsudo管理画面）用 systemd ユニット
+#   配置先: /etc/systemd/system/himatsudocmshub-himatsudo.service
+#
+# 役割: apps/himatsudo をビルドした静的アセットを `vite preview` で
+#   Tailscale IP にバインドして常駐させる。VPS のリバースプロキシはここへ転送する。
+#   （Himatsudo / HimatsudoFortune 本体を home+VPSリバースプロキシ方式で
+#    公開しているのと同じ考え方を CMS にも適用したもの）
+#
+# 前提: あらかじめ本番用に `npm run build` 済みであること（このユニットは
+#   ビルドを行わない。ビルド成果物 dist/ を配信するだけ）。
+#
+# 置き換える箇所:
+#   youruser        → アプリを動かす Linux ユーザー
+#   /home/youruser/HimatsudoCmsHub → リポジトリの絶対パス
+#   100.x.x.x       → 自宅サーバ自身の Tailscale IP（`tailscale ip -4`）
+#
+# 導入手順:
+#   cd ~/HimatsudoCmsHub/apps/himatsudo
+#   cp .env.example .env
+#   # VITE_API_BASE_URL / VITE_API_PROXY_TARGET を編集（.env.example のコメント参照）
+#   npm install
+#   npm run build
+#
+#   sudo cp deploy/home/himatsudocmshub-himatsudo.service /etc/systemd/system/
+#   sudo nano /etc/systemd/system/himatsudocmshub-himatsudo.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now himatsudocmshub-himatsudo
+#   systemctl status himatsudocmshub-himatsudo
+#   journalctl -u himatsudocmshub-himatsudo -f      # ログ追尾
+#
+# 備考:
+#   - `vite preview` は Vite が公式に「本番サーバーとして使うことは想定していない」
+#     と案内している軽量プレビューサーバーだが、静的アセットを Tailscale 経由で
+#     VPS にだけ渡す用途（インターネットに直接晒さない）であれば実用上問題ない。
+#   - 0.0.0.0 ではなく Tailscale IP に限定バインドすることで、tailnet 外には
+#     公開されない。確実にバインドできるよう After/Requires で tailscaled を待つ。
+#   - コード更新時は `git pull` → `npm run build` → `sudo systemctl restart
+#     himatsudocmshub-himatsudo`（静的ファイル配信のため再ビルド・再起動が必要）。
+# =============================================================================
+
+[Unit]
+Description=HimatsudoCmsHub - himatsudo管理画面 (vite preview, port 4174)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=youruser
+WorkingDirectory=/home/youruser/HimatsudoCmsHub/apps/himatsudo
+ExecStart=/usr/bin/npm run preview -- --host 100.x.x.x --port 4174
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

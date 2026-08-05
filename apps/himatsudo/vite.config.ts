@@ -62,9 +62,9 @@ export default defineConfig({
       },
     },
   },
-  // 本番公開（フロントと同じ VPS + Cloudflare 方式）時に `npm run build` の
-  // 成果物を `vite preview` で常駐させるための設定。docs/deploy.md の
-  // 「E. CMS をフロントと同じ方式でドメイン公開する」を参照。
+  // 本番公開（自宅サーバ + VPSリバースプロキシ方式）時に `npm run build` の
+  // 成果物を `vite preview` で常駐させるための設定。詳細は
+  // HimatsudoCmsHub リポジトリの docs/deploy.md を参照。
   preview: {
     host: '0.0.0.0',
     port: 4174,
