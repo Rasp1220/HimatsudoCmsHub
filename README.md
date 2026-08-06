@@ -92,7 +92,10 @@ cd apps/fortune && npm test
 
 ## 本番デプロイ
 
-`deploy/nginx-admin-himatsudo-com.conf` を参照してください。
-`admin.himatsudo.com` のルート (`/`) で `public/index.html`（ハブ入口ページ）を、
-`/himatsudo/` と `/fortune/` パス配下でそれぞれのビルド成果物 (`apps/*/dist/`) を
-配信する構成のサンプルです。
+2通りの方式があります。どちらか一方を選んでください（併用不可）。
+
+- **静的ファイル直配信方式**（`deploy/nginx-admin-himatsudo-com.conf`）
+  ビルド成果物 (`apps/*/dist/`) をVPSに直接置いて nginx が配信する、最もシンプルな方式。
+- **自宅サーバ + VPSリバースプロキシ方式**（[`docs/deploy.md`](docs/deploy.md)）
+  Himatsudo / HimatsudoFortune 本体と同じ運用（自宅サーバでプロセスを常駐させ、
+  VPSはTailscale経由でリバースプロキシするだけ）に揃えたい場合はこちら。

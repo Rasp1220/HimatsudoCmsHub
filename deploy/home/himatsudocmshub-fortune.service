@@ -1,0 +1,54 @@
+# =============================================================================
+# 自宅サーバ（CMS: fortune管理画面）用 systemd ユニット
+#   配置先: /etc/systemd/system/himatsudocmshub-fortune.service
+#
+# 役割: apps/fortune をビルドした静的アセットを `vite preview` で
+#   Tailscale IP にバインドして常駐させる。VPS のリバースプロキシはここへ転送する。
+#   ポート・ユニット名とも himatsudo 用（4174 / himatsudocmshub-himatsudo）とは
+#   別にしているため衝突しない。
+#
+# 前提: あらかじめ本番用に `npm run build` 済みであること（このユニットは
+#   ビルドを行わない。ビルド成果物 dist/ を配信するだけ）。
+#
+# 置き換える箇所:
+#   youruser        → アプリを動かす Linux ユーザー
+#   /home/youruser/HimatsudoCmsHub → リポジトリの絶対パス
+#   100.x.x.x       → 自宅サーバ自身の Tailscale IP（`tailscale ip -4`）
+#
+# 導入手順:
+#   cd ~/HimatsudoCmsHub/apps/fortune
+#   cp .env.example .env
+#   # VITE_API_BASE_URL / VITE_API_PROXY_TARGET を編集
+#   npm install
+#   npm run build
+#
+#   sudo cp deploy/home/himatsudocmshub-fortune.service /etc/systemd/system/
+#   sudo nano /etc/systemd/system/himatsudocmshub-fortune.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now himatsudocmshub-fortune
+#   systemctl status himatsudocmshub-fortune
+#   journalctl -u himatsudocmshub-fortune -f      # ログ追尾
+#
+# 備考:
+#   - himatsudocmshub-himatsudo.service と同様、`vite preview` を Tailscale IP
+#     限定で常駐させる構成。詳細な注意点はそちらのコメントを参照。
+#   - コード更新時は `git pull` → `npm run build` → `sudo systemctl restart
+#     himatsudocmshub-fortune`。
+# =============================================================================
+
+[Unit]
+Description=HimatsudoCmsHub - fortune管理画面 (vite preview, port 4175)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=youruser
+WorkingDirectory=/home/youruser/HimatsudoCmsHub/apps/fortune
+ExecStart=/usr/bin/npm run preview -- --host 100.x.x.x --port 4175
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
