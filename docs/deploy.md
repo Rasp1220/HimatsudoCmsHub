@@ -17,16 +17,21 @@ Himatsudo / HimatsudoFortune 本体を「自宅サーバでアプリを動かし
             ▼
    ┌─────────────────┐        Tailscale (暗号化された tailnet)
    │   VPS（玄関口）   │  ──────────────────────────────►  ┌──────────────────────┐
-   │  - nginx        │   /himatsudo/ → 100.x.x.x:4174     │   自宅サーバ（本体）    │
-   │  - TLS 終端      │   /fortune/   → 100.x.x.x:4175     │  - vite preview ×2    │
-   │  - 公開 IP       │                                    │    (ビルド済み静的資産) │
-   └─────────────────┘                                    └──────────────────────┘
+   │  - nginx        │   /            → 100.x.x.x:4173     │   自宅サーバ（本体）    │
+   │  - TLS 終端      │   /himatsudo/  → 100.x.x.x:4174     │  - PHPビルトインサーバー│
+   │  - 公開 IP       │   /fortune/    → 100.x.x.x:4175     │    (ハブ入口ページ)    │
+   │  （リポジトリ・   │                                    │  - vite preview ×2    │
+   │   ファイル配置    │                                    │    (ビルド済み静的資産) │
+   │   一切なし）      │                                    └──────────────────────┘
+   └─────────────────┘
 ```
 
-- `/himatsudo/` `/fortune/` はそれぞれ自宅サーバ上で常駐する `vite preview`
-  （ビルド済み静的アセットの配信）へリバースプロキシする。
-- ハブ入口ページ（`/`）だけは単一の静的HTMLなので、VPS上に直接置いて配信する
-  （自宅サーバへは飛ばさない）。
+- `/` `/himatsudo/` `/fortune/` はすべて自宅サーバ上で常駐するプロセスへ
+  リバースプロキシする。**VPS側にはこのリポジトリを一切置かない**
+  （Himatsudo / HimatsudoFortune 本体と同じ運用）。nginx confファイルだけを
+  VPSに配置すれば完結する。
+- ハブ入口ページ（`/`）はビルド不要の単一静的HTMLなので、PHPビルトイン
+  サーバーで配信するだけの軽量プロセスとして自宅サーバ側に置く。
 - CMSからバックエンドAPI（Himatsudo / HimatsudoFortune）へのリクエストは、
   ブラウザから直接それぞれのバックエンドドメインへクロスオリジンで行われる。
   この構成のnginx/vite previewはAPIをプロキシしない。
@@ -70,27 +75,32 @@ npm run build   # → dist/
 cd ..
 ```
 
-### A-3. `vite preview` を Tailscale IP で常駐させる
+### A-3. ハブ入口ページ・`vite preview` を Tailscale IP で常駐させる
 
-`deploy/home/himatsudocmshub-himatsudo.service` と
+`deploy/home/himatsudocmshub-landing.service`、
+`deploy/home/himatsudocmshub-himatsudo.service`、
 `deploy/home/himatsudocmshub-fortune.service` を雛形として利用する。
 
 ```bash
+sudo cp deploy/home/himatsudocmshub-landing.service /etc/systemd/system/
 sudo cp deploy/home/himatsudocmshub-himatsudo.service /etc/systemd/system/
 sudo cp deploy/home/himatsudocmshub-fortune.service /etc/systemd/system/
+sudo nano /etc/systemd/system/himatsudocmshub-landing.service
 sudo nano /etc/systemd/system/himatsudocmshub-himatsudo.service
 sudo nano /etc/systemd/system/himatsudocmshub-fortune.service
 #   youruser / パス / 100.x.x.x（自分の Tailscale IP）を置換
 
 sudo systemctl daemon-reload
+sudo systemctl enable --now himatsudocmshub-landing
 sudo systemctl enable --now himatsudocmshub-himatsudo
 sudo systemctl enable --now himatsudocmshub-fortune
-systemctl status himatsudocmshub-himatsudo himatsudocmshub-fortune   # active (running) を確認
+systemctl status himatsudocmshub-landing himatsudocmshub-himatsudo himatsudocmshub-fortune   # active (running) を確認
 ```
 
 ### A-4. 自宅サーバ単体で動作確認
 
 ```bash
+curl -I http://100.x.x.x:4173/            # 200 が返ればOK（ハブ入口ページ）
 curl -I http://100.x.x.x:4174/himatsudo/   # 200 が返ればOK
 curl -I http://100.x.x.x:4175/fortune/     # 200 が返ればOK
 ```
@@ -99,14 +109,9 @@ curl -I http://100.x.x.x:4175/fortune/     # 200 が返ればOK
 
 ## B. VPS 側でやること
 
-### B-1. ハブ入口ページを配置
+VPSにはこのリポジトリを置く必要はありません。nginx confファイルを1つ配置するだけです。
 
-```bash
-sudo mkdir -p /var/www/himatsudocmshub/public
-sudo cp public/index.html /var/www/himatsudocmshub/public/
-```
-
-### B-2. nginx を導入してリバースプロキシ設定
+### B-1. nginx を導入してリバースプロキシ設定
 
 ```bash
 sudo cp deploy/vps/nginx-admin-himatsudo-com.conf /etc/nginx/sites-available/admin-himatsudo-com.conf
@@ -116,14 +121,14 @@ sudo ln -s /etc/nginx/sites-available/admin-himatsudo-com.conf /etc/nginx/sites-
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### B-3. TLS 証明書（Let's Encrypt）
+### B-2. TLS 証明書（Let's Encrypt）
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d admin.himatsudo.com
 ```
 
-### B-4. Basic 認証（推奨）
+### B-3. Basic 認証（推奨）
 
 管理画面を無防備にインターネット公開することになるため、併用を強く推奨。
 
@@ -161,6 +166,8 @@ curl -I https://admin.himatsudo.com/fortune/
 
 `vite preview` はビルド済みの静的ファイルを配信しているだけなので、コード変更を
 反映するには再ビルド + 再起動が必要（PHPアプリのような自動反映はされない）。
+ハブ入口ページ（`public/index.html`）はPHPビルトインサーバーがリクエストごとに
+読み直すため、`git pull` だけで反映され再起動は不要。
 
 ```bash
 cd ~/HimatsudoCmsHub
@@ -178,9 +185,10 @@ sudo systemctl restart himatsudocmshub-fortune
 
 ## 静的ファイル直配信方式との併用について
 
-`deploy/nginx-admin-himatsudo-com.conf`（リポジトリ直下）は、ビルド成果物を
-VPSに直接置いて nginx が `alias` で静的配信するもう一つの方式です。**この
-docs/deploy.md の方式（`deploy/vps/nginx-admin-himatsudo-com.conf`）とは
+`deploy/nginx-admin-himatsudo-com.conf`（リポジトリ直下）は、ビルド成果物や
+`public/index.html` をVPSに直接置いて nginx が `alias` / `root` で静的配信する
+もう一つの方式です。**この docs/deploy.md の方式（`deploy/vps/nginx-admin-himatsudo-com.conf`、
+VPSにはファイルを一切置かずすべて自宅サーバへプロキシする方式）とは
 `server_name admin.himatsudo.com` が重複するため、同時に `sites-enabled` へ
 配置しないでください。** どちらか一方だけを有効化してください。
 
@@ -191,7 +199,7 @@ docs/deploy.md の方式（`deploy/vps/nginx-admin-himatsudo-com.conf`）とは
 | 症状 | 確認ポイント |
 |------|-------------|
 | VPS から自宅に繋がらない | 両機が同じ tailnet か（`tailscale status`）、自宅で対象の`.service`が active か |
-| 502 Bad Gateway | nginx の `proxy_pass` の IP/ポートが自宅の Tailscale IP と一致しているか、`vite preview` が実際に4174/4175で待ち受けているか（`ss -tlnp \| grep -E '4174\|4175'`） |
+| 502 Bad Gateway | nginx の `proxy_pass` の IP/ポートが自宅の Tailscale IP と一致しているか、対象プロセスが実際に4173/4174/4175で待ち受けているか（`ss -tlnp \| grep -E '4173\|4174\|4175'`） |
 | ログインできない・CORSエラー | 呼び出し先バックエンドの `CMS_HUB_ORIGIN` / `CORS_ALLOWED_ORIGINS` に `https://admin.himatsudo.com` が入っているか |
 | コードを更新したのに反映されない | `npm run build` → `systemctl restart` を忘れていないか（静的配信のため自動反映されない） |
 | `himatsudocmshub-*.service` が起動しない/落ちる | `WorkingDirectory` / `ExecStart` のパスにテンプレートの `youruser` 等のプレースホルダーが残っていないか |
