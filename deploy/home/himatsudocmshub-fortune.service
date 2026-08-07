@@ -10,10 +10,8 @@
 # 前提: あらかじめ本番用に `npm run build` 済みであること（このユニットは
 #   ビルドを行わない。ビルド成果物 dist/ を配信するだけ）。
 #
-# 置き換える箇所:
-#   youruser        → アプリを動かす Linux ユーザー
-#   /home/youruser/HimatsudoCmsHub → リポジトリの絶対パス
-#   100.x.x.x       → 自宅サーバ自身の Tailscale IP（`tailscale ip -4`）
+# ユーザー・パス・Tailscale IPは rasp@mc-server の実際の値を埋め込み済み。
+# 別環境で使う場合は User / WorkingDirectory / --host を書き換えること。
 #
 # 導入手順:
 #   cd ~/HimatsudoCmsHub/apps/fortune
@@ -44,9 +42,9 @@ Requires=tailscaled.service
 
 [Service]
 Type=simple
-User=youruser
-WorkingDirectory=/home/youruser/HimatsudoCmsHub/apps/fortune
-ExecStart=/usr/bin/npm run preview -- --host 100.x.x.x --port 4175
+User=rasp
+WorkingDirectory=/home/rasp/HimatsudoCmsHub/apps/fortune
+ExecStart=/usr/bin/npm run preview -- --host 100.93.52.49 --port 4175
 Restart=always
 RestartSec=3
 

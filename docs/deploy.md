@@ -17,9 +17,9 @@ Himatsudo / HimatsudoFortune 本体を「自宅サーバでアプリを動かし
             ▼
    ┌─────────────────┐        Tailscale (暗号化された tailnet)
    │   VPS（玄関口）   │  ──────────────────────────────►  ┌──────────────────────┐
-   │  - nginx        │   /            → 100.x.x.x:4173     │   自宅サーバ（本体）    │
-   │  - TLS 終端      │   /himatsudo/  → 100.x.x.x:4174     │  - PHPビルトインサーバー│
-   │  - 公開 IP       │   /fortune/    → 100.x.x.x:4175     │    (ハブ入口ページ)    │
+   │  - nginx        │   /            → 100.93.52.49:4173     │   自宅サーバ（本体）    │
+   │  - TLS 終端      │   /himatsudo/  → 100.93.52.49:4174     │  - PHPビルトインサーバー│
+   │  - 公開 IP       │   /fortune/    → 100.93.52.49:4175     │    (ハブ入口ページ)    │
    │  （リポジトリ・   │                                    │  - vite preview ×2    │
    │   ファイル配置    │                                    │    (ビルド済み静的資産) │
    │   一切なし）      │                                    └──────────────────────┘
@@ -79,16 +79,14 @@ cd ..
 
 `deploy/home/himatsudocmshub-landing.service`、
 `deploy/home/himatsudocmshub-himatsudo.service`、
-`deploy/home/himatsudocmshub-fortune.service` を雛形として利用する。
+`deploy/home/himatsudocmshub-fortune.service` は `rasp@mc-server`（ユーザー名 /
+パス `/home/rasp/HimatsudoCmsHub` / Tailscale IP `100.93.52.49`）の実際の値を
+埋め込み済みなので、このままコピーするだけで使える（書き換え不要）。
 
 ```bash
 sudo cp deploy/home/himatsudocmshub-landing.service /etc/systemd/system/
 sudo cp deploy/home/himatsudocmshub-himatsudo.service /etc/systemd/system/
 sudo cp deploy/home/himatsudocmshub-fortune.service /etc/systemd/system/
-sudo nano /etc/systemd/system/himatsudocmshub-landing.service
-sudo nano /etc/systemd/system/himatsudocmshub-himatsudo.service
-sudo nano /etc/systemd/system/himatsudocmshub-fortune.service
-#   youruser / パス / 100.x.x.x（自分の Tailscale IP）を置換
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now himatsudocmshub-landing
@@ -97,12 +95,15 @@ sudo systemctl enable --now himatsudocmshub-fortune
 systemctl status himatsudocmshub-landing himatsudocmshub-himatsudo himatsudocmshub-fortune   # active (running) を確認
 ```
 
+> 別のユーザー名・パス・Tailscale IPの環境で使う場合は、各`.service`ファイル内の
+> `User` / `WorkingDirectory` / `--host`（または`ExecStart`のIP）を書き換えること。
+
 ### A-4. 自宅サーバ単体で動作確認
 
 ```bash
-curl -I http://100.x.x.x:4173/            # 200 が返ればOK（ハブ入口ページ）
-curl -I http://100.x.x.x:4174/himatsudo/   # 200 が返ればOK
-curl -I http://100.x.x.x:4175/fortune/     # 200 が返ればOK
+curl -I http://100.93.52.49:4173/            # 200 が返ればOK（ハブ入口ページ）
+curl -I http://100.93.52.49:4174/himatsudo/   # 200 が返ればOK
+curl -I http://100.93.52.49:4175/fortune/     # 200 が返ればOK
 ```
 
 ---
@@ -113,10 +114,11 @@ VPSにはこのリポジトリを置く必要はありません。nginx confフ�
 
 ### B-1. nginx を導入してリバースプロキシ設定
 
+`deploy/vps/nginx-admin-himatsudo-com.conf` は自宅サーバのTailscale IP
+（`100.93.52.49`）を埋め込み済みなので、そのままコピーするだけでよい。
+
 ```bash
 sudo cp deploy/vps/nginx-admin-himatsudo-com.conf /etc/nginx/sites-available/admin-himatsudo-com.conf
-sudo nano /etc/nginx/sites-available/admin-himatsudo-com.conf
-#   100.x.x.x → 自宅サーバの Tailscale IP に置換
 sudo ln -s /etc/nginx/sites-available/admin-himatsudo-com.conf /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
@@ -202,4 +204,4 @@ VPSにはファイルを一切置かずすべて自宅サーバへプロキシ�
 | 502 Bad Gateway | nginx の `proxy_pass` の IP/ポートが自宅の Tailscale IP と一致しているか、対象プロセスが実際に4173/4174/4175で待ち受けているか（`ss -tlnp \| grep -E '4173\|4174\|4175'`） |
 | ログインできない・CORSエラー | 呼び出し先バックエンドの `CMS_HUB_ORIGIN` / `CORS_ALLOWED_ORIGINS` に `https://admin.himatsudo.com` が入っているか |
 | コードを更新したのに反映されない | `npm run build` → `systemctl restart` を忘れていないか（静的配信のため自動反映されない） |
-| `himatsudocmshub-*.service` が起動しない/落ちる | `WorkingDirectory` / `ExecStart` のパスにテンプレートの `youruser` 等のプレースホルダーが残っていないか |
+| `himatsudocmshub-*.service` が起動しない/落ちる | `rasp@mc-server` 以外の環境で使っている場合、`WorkingDirectory` / `ExecStart` のユーザー・パス・IPを実際の値に書き換えたか |
