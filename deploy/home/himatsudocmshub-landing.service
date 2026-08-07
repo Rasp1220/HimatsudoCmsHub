@@ -1,0 +1,46 @@
+# =============================================================================
+# 自宅サーバ（CMS: ハブ入口ページ）用 systemd ユニット
+#   配置先: /etc/systemd/system/himatsudocmshub-landing.service
+#
+# 役割: public/index.html（ハブ入口ページ、2つのCMSへのリンクが並ぶだけの
+#   静的HTML）をPHPビルトインサーバーでTailscale IPにバインドして常駐させる。
+#   VPSのリバースプロキシはここへ転送する。
+#
+#   himatsudo / fortune 用（vite preview, 4174 / 4175）と同じ考え方で、
+#   VPS側にはリポジトリやファイルを一切置かず、nginx conf だけで完結させるため
+#   のユニット。ビルド不要（public/index.html はそのまま配信するだけ）。
+#
+# ユーザー・パス・Tailscale IPは rasp@mc-server の実際の値を埋め込み済み。
+# 別環境で使う場合は User / WorkingDirectory / ExecStart を書き換えること。
+#
+# 導入手順:
+#   sudo cp deploy/home/himatsudocmshub-landing.service /etc/systemd/system/
+#   sudo nano /etc/systemd/system/himatsudocmshub-landing.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now himatsudocmshub-landing
+#   systemctl status himatsudocmshub-landing
+#   journalctl -u himatsudocmshub-landing -f      # ログ追尾
+#
+# 備考:
+#   - PHPビルトインサーバーで `public/` ディレクトリをそのまま配信する
+#     （`bin/serve.php` の開発時のハブ入口ページ起動と同じ方式）。
+#   - コード更新時（public/index.html の変更）は再ビルド不要。PHPビルトイン
+#     サーバーはリクエストごとにファイルを読み直すため、再起動も基本不要。
+# =============================================================================
+
+[Unit]
+Description=HimatsudoCmsHub - ハブ入口ページ (PHP built-in server, port 4173)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=rasp
+WorkingDirectory=/home/rasp/HimatsudoCmsHub
+ExecStart=/usr/bin/php -S 100.93.52.49:4173 -t /home/rasp/HimatsudoCmsHub/public
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
