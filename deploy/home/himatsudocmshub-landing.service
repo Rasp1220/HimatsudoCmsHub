@@ -15,7 +15,6 @@
 #
 # 導入手順:
 #   sudo cp deploy/home/himatsudocmshub-landing.service /etc/systemd/system/
-#   sudo nano /etc/systemd/system/himatsudocmshub-landing.service
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now himatsudocmshub-landing
 #   systemctl status himatsudocmshub-landing

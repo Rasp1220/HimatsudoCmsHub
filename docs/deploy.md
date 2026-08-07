@@ -82,6 +82,8 @@ cd ..
 `deploy/home/himatsudocmshub-fortune.service` は `rasp@mc-server`（ユーザー名 /
 パス `/home/rasp/HimatsudoCmsHub` / Tailscale IP `100.93.52.49`）の実際の値を
 埋め込み済みなので、このままコピーするだけで使える（書き換え不要）。
+`vite preview` 用の2つには `Environment=VITE_ALLOWED_HOSTS=admin.himatsudo.com`
+も含めているので、VPS経由の`Host: admin.himatsudo.com`ヘッダーで拒否されない。
 
 ```bash
 sudo cp deploy/home/himatsudocmshub-landing.service /etc/systemd/system/
@@ -205,3 +207,4 @@ VPSにはファイルを一切置かずすべて自宅サーバへプロキシ�
 | ログインできない・CORSエラー | 呼び出し先バックエンドの `CMS_HUB_ORIGIN` / `CORS_ALLOWED_ORIGINS` に `https://admin.himatsudo.com` が入っているか |
 | コードを更新したのに反映されない | `npm run build` → `systemctl restart` を忘れていないか（静的配信のため自動反映されない） |
 | `himatsudocmshub-*.service` が起動しない/落ちる | `rasp@mc-server` 以外の環境で使っている場合、`WorkingDirectory` / `ExecStart` のユーザー・パス・IPを実際の値に書き換えたか |
+| `Blocked request. This host ("admin.himatsudo.com") is not allowed.` | `vite preview` のホストチェック。VPSのnginxが元の`Host`ヘッダーをそのまま転送するため、`himatsudocmshub-himatsudo.service` / `himatsudocmshub-fortune.service` に `Environment=VITE_ALLOWED_HOSTS=admin.himatsudo.com` が入っているか確認（`.env`の`VITE_ALLOWED_HOSTS`は`vite.config.ts`が読まないため効かない） |

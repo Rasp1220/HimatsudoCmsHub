@@ -21,7 +21,6 @@
 #   npm run build
 #
 #   sudo cp deploy/home/himatsudocmshub-fortune.service /etc/systemd/system/
-#   sudo nano /etc/systemd/system/himatsudocmshub-fortune.service
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now himatsudocmshub-fortune
 #   systemctl status himatsudocmshub-fortune
@@ -32,6 +31,8 @@
 #     限定で常駐させる構成。詳細な注意点はそちらのコメントを参照。
 #   - コード更新時は `git pull` → `npm run build` → `sudo systemctl restart
 #     himatsudocmshub-fortune`。
+#   - VITE_ALLOWED_HOSTS=admin.himatsudo.com が必須（理由は
+#     himatsudocmshub-himatsudo.service のコメント参照）。
 # =============================================================================
 
 [Unit]
@@ -44,6 +45,7 @@ Requires=tailscaled.service
 Type=simple
 User=rasp
 WorkingDirectory=/home/rasp/HimatsudoCmsHub/apps/fortune
+Environment=VITE_ALLOWED_HOSTS=admin.himatsudo.com
 ExecStart=/usr/bin/npm run preview -- --host 100.93.52.49 --port 4175
 Restart=always
 RestartSec=3

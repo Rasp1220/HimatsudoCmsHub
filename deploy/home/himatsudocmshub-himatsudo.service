@@ -21,7 +21,6 @@
 #   npm run build
 #
 #   sudo cp deploy/home/himatsudocmshub-himatsudo.service /etc/systemd/system/
-#   sudo nano /etc/systemd/system/himatsudocmshub-himatsudo.service
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now himatsudocmshub-himatsudo
 #   systemctl status himatsudocmshub-himatsudo
@@ -35,6 +34,11 @@
 #     公開されない。確実にバインドできるよう After/Requires で tailscaled を待つ。
 #   - コード更新時は `git pull` → `npm run build` → `sudo systemctl restart
 #     himatsudocmshub-himatsudo`（静的ファイル配信のため再ビルド・再起動が必要）。
+#   - VITE_ALLOWED_HOSTS=admin.himatsudo.com が必須。VPSのnginxは元のHostヘッダー
+#     （admin.himatsudo.com）をそのまま転送するため、これが無いと vite preview が
+#     「Blocked request. This host is not allowed.」で拒否する
+#     （`vite.config.ts` の `allowedHosts` は `.env` を読まず `process.env` を直接
+#     見るため、`.env` に書いても効かない。Environment= で渡す必要がある）。
 # =============================================================================
 
 [Unit]
@@ -47,6 +51,7 @@ Requires=tailscaled.service
 Type=simple
 User=rasp
 WorkingDirectory=/home/rasp/HimatsudoCmsHub/apps/himatsudo
+Environment=VITE_ALLOWED_HOSTS=admin.himatsudo.com
 ExecStart=/usr/bin/npm run preview -- --host 100.93.52.49 --port 4174
 Restart=always
 RestartSec=3
