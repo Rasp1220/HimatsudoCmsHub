@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
+import { resolveHubUrl } from '@/utils/hubUrl'
 
 defineProps<{ isOpen: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const route = useRoute()
+const hubUrl = resolveHubUrl()
 
 const navItems = [
   { name: 'Dashboard', label: 'ダッシュボード', icon: '🏠', to: '/dashboard' },
@@ -52,6 +54,13 @@ function isActive(name: string): boolean {
         <span class="text-xl">✕</span>
       </button>
     </div>
+    <a
+      :href="hubUrl"
+      class="flex items-center gap-2 px-6 py-2.5 text-xs text-slate-400 hover:bg-slate-700 hover:text-white border-b border-slate-700 transition-colors"
+    >
+      <span class="text-sm leading-none">←</span>
+      統合CMSハブへ戻る
+    </a>
     <nav class="flex-1 py-4 overflow-y-auto">
       <ul class="space-y-1 px-3">
         <li v-for="item in navItems" :key="item.name">

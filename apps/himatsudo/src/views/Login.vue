@@ -2,10 +2,12 @@
 import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { resolveHubUrl } from '@/utils/hubUrl'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const hubUrl = resolveHubUrl()
 
 const form = reactive({ email: '', password: '' })
 const loading = ref(false)
@@ -72,6 +74,12 @@ async function handleLogin() {
           {{ loading ? 'ログイン中…' : 'ログイン' }}
         </button>
       </form>
+
+      <p class="text-center mt-6">
+        <a :href="hubUrl" class="text-xs text-gray-500 hover:text-gray-800 hover:underline">
+          ← 統合CMSハブへ戻る
+        </a>
+      </p>
     </div>
   </div>
 </template>
