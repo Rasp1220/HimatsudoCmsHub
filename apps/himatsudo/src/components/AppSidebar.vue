@@ -28,11 +28,11 @@ function isActive(name: string): boolean {
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-30 bg-black/50 md:hidden"
+    class="fixed inset-0 z-30 bg-black/50 xl:hidden"
     @click="emit('close')"
   />
   <aside
-    class="fixed inset-y-0 left-0 z-40 w-60 bg-slate-800 text-white flex flex-col flex-shrink-0 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0"
+    class="fixed inset-y-0 left-0 z-40 w-60 bg-slate-800 text-white flex flex-col flex-shrink-0 transform transition-transform duration-200 ease-in-out xl:static xl:translate-x-0"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
@@ -42,7 +42,7 @@ function isActive(name: string): boolean {
       </div>
       <button
         type="button"
-        class="md:hidden text-slate-300 hover:text-white"
+        class="xl:hidden text-slate-300 hover:text-white"
         aria-label="メニューを閉じる"
         @click="emit('close')"
       >
