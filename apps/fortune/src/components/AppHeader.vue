@@ -35,7 +35,7 @@ async function handleLogout() {
     <div class="flex items-center gap-3 min-w-0">
       <button
         type="button"
-        class="md:hidden text-gray-500 hover:text-gray-800 flex-shrink-0"
+        class="xl:hidden text-gray-500 hover:text-gray-800 flex-shrink-0"
         aria-label="メニューを開く"
         @click="$emit('toggle-sidebar')"
       >

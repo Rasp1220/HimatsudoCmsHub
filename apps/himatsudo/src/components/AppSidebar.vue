@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
+import { resolveHubUrl } from '@/utils/hubUrl'
 
 defineProps<{ isOpen: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const route = useRoute()
+const hubUrl = resolveHubUrl()
 
 const navItems = [
   { name: 'Dashboard', label: 'ダッシュボード', icon: '🏠', to: '/dashboard' },
@@ -26,11 +28,11 @@ function isActive(name: string): boolean {
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-30 bg-black/50 md:hidden"
+    class="fixed inset-0 z-30 bg-black/50 xl:hidden"
     @click="emit('close')"
   />
   <aside
-    class="fixed inset-y-0 left-0 z-40 w-60 bg-slate-800 text-white flex flex-col flex-shrink-0 transform transition-transform duration-200 ease-in-out md:static md:translate-x-0"
+    class="fixed inset-y-0 left-0 z-40 w-60 bg-slate-800 text-white flex flex-col flex-shrink-0 transform transition-transform duration-200 ease-in-out xl:static xl:translate-x-0"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
@@ -40,13 +42,20 @@ function isActive(name: string): boolean {
       </div>
       <button
         type="button"
-        class="md:hidden text-slate-300 hover:text-white"
+        class="xl:hidden text-slate-300 hover:text-white"
         aria-label="メニューを閉じる"
         @click="emit('close')"
       >
         <span class="text-xl">✕</span>
       </button>
     </div>
+    <a
+      :href="hubUrl"
+      class="flex items-center gap-2 px-6 py-2.5 text-xs text-slate-400 hover:bg-slate-700 hover:text-white border-b border-slate-700 transition-colors"
+    >
+      <span class="text-sm leading-none">←</span>
+      統合CMSハブへ戻る
+    </a>
     <nav class="flex-1 py-4 overflow-y-auto">
       <ul class="space-y-1 px-3">
         <li v-for="item in navItems" :key="item.name">
